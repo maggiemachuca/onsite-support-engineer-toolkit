@@ -1,140 +1,179 @@
-📝 Ticket 001 – Password Reset & MFA Sync Issue
-
-Anonymized recreation based on the types of tickets I handled during my internship.
-
-🆔 Ticket Summary
-
-- <p><b>Issue:</b> User unable to log into Windows; password not accepted. Claims password was reset the previous day.</p>
-- <p><b>User Impact:</b> Blocked from logging in (productivity halted).</p>
-- <p><b>Priority:</b> P2 – User unable to work but issue isolated.</p>
-
-- <p><b>SLA:</b> Response within 1 hour, resolution within 4 hours.</p>
-
-👤 User Information
-
-- <p>User: J.D.</p>
-
-- <p>Department: Accounting</p>
-
-- <p>Device: WIN-ACCT-044</p>
-
-- <p>Location: Building B, 2nd Floor</p>
+# 📝 Ticket 001 – Password Reset & MFA Sync Issue (Credential Mismatch)
+*An anonymized recreation based on the types of identity & access tickets I handled during my internship.*
 
 ---
 
-📅 Timeline
-Time	Action
-<p>08:12	Ticket received & acknowledged</p>
-<p>08:15	Contacted user; confirmed the issue</p>
-<p>08:17	Remoted into PC via RMM</p>
-<p>08:23	AD password reset & MFA sync verified</p>
-<p>08:28	User able to log in; tested Outlook + Teams</p>
-<p>08:33	Ticket documented & closed</p>
+## 🆔 **Ticket Summary**
 
-🔍 Initial Triage Questions
+**Issue:** User unable to log into Windows; password not accepted. MFA failing on reauthentication.  
+**User Impact:** Blocked from accessing workstation; productivity halted.  
+**Priority:** P1/P2 depending on role (treated as P2 here).  
+**SLA:** Response within 1 hour, resolution within 4 hours.
 
-<p>“When did you last successfully log in?”</p>
-<p>➡️ Yesterday afternoon after resetting password.</p>
+---
 
-<p>“Have you recently changed your password via another device?”</p>
-<p>➡️ Yes — user changed it from laptop at home.</p>
+## 👤 **User Information**
 
-<p>“Are you seeing ‘incorrect password’ or another message?”</p>
-<p>➡️ Incorrect password.</p>
+- **User:** J.D.  
+- **Department:** Accounting  
+- **Device:** WIN-ACCT-044  
+- **Location:** Building B, 2nd Floor  
 
-<p>This indicated a password synchronization issue between Azure AD & on-prem AD.</p>
+---
 
-🛠️ Troubleshooting Steps
-1. Verified Current AD Account Status
+## 📅 **Timeline**
 
-- Checked account in ADUC
+| Time | Action |
+|------|--------|
+| 08:12 | Ticket received & acknowledged |
+| 08:15 | Contacted user to confirm symptoms |
+| 08:17 | Remoted into device via RMM |
+| 08:23 | Performed AD password reset & MFA resync |
+| 08:28 | Verified user login + app functionality |
+| 08:33 | Ticket updated & closed |
 
-- Account was not locked
+---
 
-- Noted timestamp showed password was changed ~18 hours ago
+## 🔍 **Initial Triage Questions**
 
-- Confirmed user is in correct security groups
+- “When were you last able to log in?”  
+  ➡️ *Yesterday after resetting password.*
 
-2. Verified Password Sync Status
+- “Did you reset your password onsite or remotely?”  
+  ➡️ *Reset at home.*
 
-- Checked DirSync/Azure Sync status in the admin dashboard
+- “Does the login error say incorrect password?”  
+  ➡️ *Yes.*
 
-- Password hash sync timestamp appeared slightly outdated
+- “Does MFA fail as well?”  
+  ➡️ *Yes, it doesn’t prompt correctly.*
 
-3. Reset Password Manually
+This strongly suggested a **password sync delay** & **cached credentials conflict** between Azure AD and on-prem AD.
 
-- Reset password in ADUC
+---
 
-- Re-synced MFA via Azure portal
+## 🛠️ **Troubleshooting Steps**
 
-- Instructed user to use new, temporary password once onsite
+### **1. Verified AD Account Status**
 
-4. Session Cache Clear
+Opened ADUC and confirmed:
 
-- Remotely restarted user’s machine
+- Account **not locked**  
+- Password changed ~18 hours prior  
+- Group membership correct  
+- “User must change password at next logon” not checked  
 
-- Cleared cached credentials using control keymgr.dll
+Everything normal → likely sync delay.
 
-5. Walked User Through Login
+---
 
-- User successfully logged into Windows
+### **2. Checked Azure Sync Status**
 
-- Forced password change on login
+Reviewed:
 
-- Confirmed MFA prompt worked correctly
+- Azure AD Connect sync interval  
+- Most recent password hash sync  
+- MFA configuration status  
 
-✔ Issue Resolved
+Noticed password sync timestamp was behind.
 
-<p>Cause: Password changed offsite did not fully sync between Azure and on-prem AD. Cached credentials prevented proper authentication.</p>
-<p>Fix: Reset password in on-prem AD, forced resync, cleared cached credentials, and verified MFA.</p>
+---
 
-🔎 Verification Steps
+### **3. Reset Password in On-Prem AD**
 
-- Login successful
+- Reset password manually  
+- Forced password hash sync  
+- Verified MFA methods in Azure portal  
+- Ensured no conflicting authentication methods  
 
-- Outlook synced
+---
 
-- Teams signed in
+### **4. Cleared Cached Credentials on Workstation**
 
-- Mapped drives visible
+Via remote tools:
 
-- No further errors reported
+- Opened Credential Manager  
+- Removed entries for:  
+  - `domain.local`  
+  - `AzureAD`  
+  - Office apps  
+  - VPN credentials  
 
-🔁 Escalation (If Needed)
+Cleared local credential conflicts.
 
-<p>Not required.</p>
-<p>If issue persisted, next steps would have included:</p>
+---
 
-- Checking AD replication across domain controllers
+### **5. Restarted Workstation**
 
-- Reviewing Azure AD Connect health
+Restarted device remotely to ensure clean authentication with new password.
 
-- Checking logs under Applications and Services Logs → Directory Services
+After reboot:
 
-🧾 User Communication
+- User able to log in  
+- MFA prompt appeared correctly  
+- Authentication succeeded  
+- No further errors  
 
-<p><b>Initial response:</b></p>
+---
 
-<p>“Hi J.D., I’m reviewing your login issue now. I’ll give you a call in a few minutes so we can get you back into your account.”</p>
+## ✔ **Issue Resolved**
 
-<p><b>Mid-troubleshooting update:</b></p>
+**Cause:**  
+Password reset offsite triggered **MFA + password sync mismatch**, compounded by **cached credentials** on local workstation.
 
-<p>“I’m resetting your password and clearing cached credentials. I’ll stay on the line while you test.”</p>
+**Fix:**  
+Reset password on-prem, forced Azure AD sync, cleared cached creds, and verified MFA.
 
-<p><b>Completion:</b></p>
+---
 
-<p>“Your password and MFA are now fully synced and everything is working. If you run into any issues today, please reach out and I’ll take care of it.”</p>
+## 🔎 **Verification Steps**
 
-📚 Ticket Notes (Technician)
+- Successful Windows login  
+- MFA functional  
+- Outlook connected  
+- Teams logged in  
+- File shares mounting normally  
+- No domain trust issues  
 
-- Password had been reset offsite → likely sync delay
+User confirmed full access.
 
-- No AD account lockout
+---
 
-- Resync resolved issue immediately
+## 🔁 **Escalation (If Needed)**
 
-- Updated internal documentation on handling MFA desync events
+Not required.
 
-<p>Closed ticket with full user verification</p>
+Would escalate if:
 
-🟢 Status: Closed
+- AD replication failed  
+- Azure AD Connect was stuck  
+- User certificate corrupt  
+- MFA configuration mismatched  
+- Workstation domain trust broken  
+
+---
+
+## 🧾 **User Communication**
+
+**Initial:**  
+> “Hi J.D., I see you’re unable to log in. I’m going to review your account and get this resolved quickly.”
+
+**During troubleshooting:**  
+> “It looks like your password didn’t sync correctly yesterday. I’m refreshing it now and clearing the cached information on your device.”
+
+**Resolution:**  
+> “You should now be able to log in with your updated password. I verified MFA, email, Teams, and file access. Please let me know if anything else comes up.”
+
+---
+
+## 📚 **Technician Notes**
+
+- Password hash sync delay identified  
+- Cleared conflicting cached credentials  
+- Updated internal notes regarding MFA desync troubleshooting  
+- Verified user access to all core applications  
+- No additional tickets needed  
+
+---
+
+# 🟢 **Status: Closed**
