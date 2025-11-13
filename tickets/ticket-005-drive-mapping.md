@@ -184,5 +184,27 @@ Would escalate if:
 
 ---
 
-## 🧾
+## 🧾 **User Communication**
 
+**Initial message:**  
+> “Hi C.P., I’m reviewing the issue with the Operations shared drive. I’ll run some diagnostics and update you shortly.”
+
+**Mid-fix update:**  
+> “It appears the drive mapping didn’t update after your password change. I’m refreshing your credentials and reapplying your group policy now.”
+
+**Resolution:**  
+> “Your O: drive should now be mapped correctly. I verified access and everything looks good. Please let me know if it drops again.”
+
+---
+
+## 📚 **Technician Notes**
+
+- UNC path worked, indicating network and permissions were intact  
+- GPO mapping missing due to stale credentials  
+- Cleared credential manager entries + forced GPO sync  
+- Updated internal notes with steps for drive mapping failure after password change  
+- User confirmed issue fully resolved  
+
+---
+
+# 🟢 **Status: Closed**
