@@ -1,5 +1,3 @@
-# onsite-support-engineer-toolkit
-
 # 🧰 Onsite Support Engineer Toolkit
 
 A practical, real-world collection of troubleshooting workflows, ticket documentation, and support processes based on my hands-on experience working in a managed support environment.
